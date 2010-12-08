@@ -1,0 +1,5 @@
+username: tunnlr1872
+host: ssh1.tunnlr.com
+password: 1cooldude
+remote_port: 11382
+local_port: 3000
