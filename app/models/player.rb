@@ -26,10 +26,7 @@ class Player < ActiveRecord::Base
     keywords = names + non_names
     Player.all.each do |user|
       if !user.processed
-        begin
-          user.process_user(keywords)
-        rescue          
-        end
+        user.process_user(keywords)
       end
     end
   end
@@ -38,7 +35,11 @@ class Player < ActiveRecord::Base
   def process_user(keywords)
     cursor = -1
     while cursor != 0
+      begin
       twitter_request = Twitter.friends(self.twitter_name, :cursor => cursor)
+      rescue
+       cursor = 0
+      end
       twitter_request.users.each do |follower|
         if !follower.verified
           name = follower.name || ""
