@@ -17,19 +17,20 @@ class Player < ActiveRecord::Base
   
   def self.walk_twitter
     keywords = ["babe", "candy", "princess", "model", "chick", "girl", "lady"]
-    User.all.each do |user|
+    Player.all.each do |user|
       if !user.processed
-        process_user(user)
+        user.process_user
       end
     end
   end
   
-  private
-  def self.process_user(user)
+
+  def process_user
     keywords = ["babe", "sex" "candy", "goddess", "actress", "hostess", "woman", "princess", "model", "chick", "girl", "lady", "booking", "vixen", "bikini", "porn", "dancer", "massage"]
     cursor = -1
     while cursor != 0
-      Twitter.friends(user.twitter_name, :cursor => cursor).users.each do |follower|
+      twitter_request = Twitter.friends(self.twitter_name, :cursor => cursor)
+      twitter_request.users.each do |follower|
         if !follower.verified
           name = follower.name.downcase
           desc = follower.description.downcase
@@ -37,11 +38,12 @@ class Player < ActiveRecord::Base
             woman = Woman.find_or_create_by_twitter_id(follower.id)
             woman.name = follower.name
             woman.save
-            user.women << woman
-            user.save
+            self.women << woman
+            self.save
           end
         end
       end
+      cursor = twitter_request.next_cursor
     end
   end
 end
