@@ -23,41 +23,54 @@ class Player < ActiveRecord::Base
     while (line = file.gets)
       names << line.split(' ').first.downcase
     end
-    keywords = names + non_names
     Player.all.each do |user|
       if !user.processed
-        user.process_user(keywords)
+        user.process_user(names, non_names)
       end
     end
   end
   
 
-  def process_user(keywords)
+  def process_user(names, keywords)
     cursor = -1
+    total_users = 0
     while cursor != 0
       begin
       twitter_request = Twitter.friends(self.twitter_name, :cursor => cursor)
       rescue
        cursor = 0
+       return
       end
       twitter_request.users.each do |follower|
         if !follower.verified
-          name = follower.name || ""
-          desc = follower.description | ""
+          name        = follower.name || ""
+          screen_name = follower.screen_name || ""
+          desc = follower.description || ""
           Votable.find_or_create_by_twitter_id_and_twitter_name(:twitter_name => name, :twitter_id => follower.id)
-          if keywords.any? {|str| name.downcase.include?(str) || desc.downcase.include?(str) }
+          if is_in_names(name, names) || keywords.any? {|str| screen_name.downcase.include?(str) || desc.downcase.include?(str) }
             woman = Woman.find_or_create_by_twitter_id(follower.id)
             woman.name = follower.name
             woman.save
             self.women << woman
           end
         end
-        self.total_followers += 1
+        total_users += 1
         self.save
       end
       cursor = twitter_request.next_cursor
     end
     self.processed = true;
+    self.total_followers = total_users
     self.save
+  end
+  
+  private
+  def is_in_names(str, names)
+    str.split(' ').each do |a|
+      if a.downcase.member?(names)
+        return true
+      end
+    end
+    return false
   end
 end
