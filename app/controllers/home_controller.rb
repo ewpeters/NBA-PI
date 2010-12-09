@@ -1,5 +1,5 @@
 class HomeController < ApplicationController
   def index
-    @users = User.find(:all, :include => :women).sort_by { |u| u.women.size }
+    @players = Player.find(:all, :include => :women).sort { |x, y| y.women.size <=> x.women.size }
   end
 end

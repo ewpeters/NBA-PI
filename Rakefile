@@ -9,7 +9,7 @@ require 'rake/rdoctask'
 
 require 'tasks/rails'
 
-namespace :user do 
+namespace :player do 
   desc "Pick a random product as the prize"
   task :parse => :environment do
     file = File.new("players", "r")

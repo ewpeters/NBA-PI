@@ -1,11 +1,7 @@
 class Player < ActiveRecord::Base
   has_many :followings
-  has_many :players, :through => :followings
+  has_many :women, :through => :followings
   belongs_to :team
-  
-  def self.walk_twitter
-    keywords = ["babe", "candy", "princess", "model", "chick", "girl", "lady"]
-  end
   
   def picture
     if self.twitter_id.nil?
@@ -16,25 +12,37 @@ class Player < ActiveRecord::Base
   end
   
   def self.walk_twitter
-    keywords = ["babe", "candy", "princess", "model", "chick", "girl", "lady"]
+    non_names = ["miss", "babe", "sex",
+"candy", "goddess", "actress", "hostess", "woman", 
+"princess", "model", "chick", "girl", "lady", "booking", 
+"vixen", "bikini", "porn", "dancer", "massage", "cute", "naked", "singer", "pretty",
+"socialite"]
+    names = []
+    file = File.open("#{Rails.root}/women", 'r')
+    while (line = file.gets)
+      names << line.split(' ').first.downcase
+    end
+    keywords = names + non_names
     Player.all.each do |user|
       if !user.processed
-        user.process_user
+        begin
+          user.process_user(keywords)
+        rescue          
+        end
       end
     end
   end
   
 
-  def process_user
-    keywords = ["babe", "sex" "candy", "goddess", "actress", "hostess", "woman", "princess", "model", "chick", "girl", "lady", "booking", "vixen", "bikini", "porn", "dancer", "massage"]
+  def process_user(keywords)
     cursor = -1
     while cursor != 0
       twitter_request = Twitter.friends(self.twitter_name, :cursor => cursor)
       twitter_request.users.each do |follower|
         if !follower.verified
-          name = follower.name.downcase
-          desc = follower.description.downcase
-          if keywords.any? {|str| name.downcase.include?(str) || name.downcase.include?(str) }
+          name = follower.name || ""
+          desc = follower.description | ""
+          if keywords.any? {|str| name.downcase.include?(str) || desc.downcase.include?(str) }
             woman = Woman.find_or_create_by_twitter_id(follower.id)
             woman.name = follower.name
             woman.save
@@ -45,5 +53,7 @@ class Player < ActiveRecord::Base
       end
       cursor = twitter_request.next_cursor
     end
+    self.processed = true;
+    self.save
   end
 end

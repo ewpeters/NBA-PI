@@ -1,7 +1,4 @@
-class Woman < ActiveRecord::Base
-  has_many :followings
-  has_many :players, :through => :followings
-  
+class Votable < ActiveRecord::Base
   def picture
     if self.twitter_id.nil?
       "http://api.twitter.com/1/users/profile_image/twitter.json?size=normal"
