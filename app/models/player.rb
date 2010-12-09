@@ -19,6 +19,7 @@ class Player < ActiveRecord::Base
 "socialite"]
     names = []
     file = File.open("#{Rails.root}/women", 'r')
+    puts names.size
     while (line = file.gets)
       names << line.split(' ').first.downcase
     end
@@ -42,14 +43,16 @@ class Player < ActiveRecord::Base
         if !follower.verified
           name = follower.name || ""
           desc = follower.description | ""
+          Votable.find_or_create_by_twitter_id_and_twitter_name(:twitter_name => name, :twitter_id => follower.id)
           if keywords.any? {|str| name.downcase.include?(str) || desc.downcase.include?(str) }
             woman = Woman.find_or_create_by_twitter_id(follower.id)
             woman.name = follower.name
             woman.save
             self.women << woman
-            self.save
           end
         end
+        self.total_followers += 1
+        self.save
       end
       cursor = twitter_request.next_cursor
     end
