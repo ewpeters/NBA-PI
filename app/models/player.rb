@@ -37,9 +37,19 @@ class Player < ActiveRecord::Base
     while cursor != 0
       begin
       twitter_request = Twitter.friends(self.twitter_name, :cursor => cursor)
-      rescue
+      rescue Twitter::NotFound
+       puts "player not found deleteing"
+       self.delete
        cursor = 0
        return
+      rescue Twitter::InternalServerError
+        puts "Rate Limite Exceded"
+        cursor = 0
+        return
+      rescue Twitter::Unauthorized
+        cursor = 0
+        puts "Protected Profile"
+        return
       end
       twitter_request.users.each do |follower|
         if !follower.verified
